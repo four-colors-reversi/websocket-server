@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<body>
+		<input type="text" id="atype" />
+		<input type="text" id="adata" />
+		<button onclick="connect()">connect</button>
+		<input type="text" id="msg" />
+		<button onclick="send()">send</button>
+
+		<div id="disp"></div>
+		<script>
+			let ws
+			const connect = () => {
+				const action = {
+					type: document.getElementById('atype').value,
+					data: JSON.parse(document.getElementById('adata').value),
+				}
+				ws = new WebSocket(
+					'ws://localhost:8080/matching',
+					btoa(JSON.stringify(action)).replaceAll('=', '')
+				)
+				console.log(ws)
+				ws.onmessage = (msg) => {
+					const p = document.createElement('p')
+					p.innerText = msg.data
+					document.getElementById('disp').appendChild(p)
+				}
+			}
+
+			const send = () => {
+				ws.send(document.getElementById('msg').value)
+			}
+		</script>
+	</body>
+</html>

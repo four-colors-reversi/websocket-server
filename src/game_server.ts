@@ -26,6 +26,7 @@ const executeGameAction = (room: GameRoom, action: Action): boolean => {
 		case 'SET': {
 			const color = GameManager.getTurnColor(room.turn, room.players)
 			result = GameManager.setStone(room.field, room.players, action.data.position, color)
+			room.score = GameManager.calcScores(room.field, room.players)
 			break
 		}
 		case 'PASS': {
@@ -33,16 +34,21 @@ const executeGameAction = (room: GameRoom, action: Action): boolean => {
 			break
 		}
 	}
-	if (result) room.turn += 1
-
+	if (result) {
+		room.turn += 1
+	}
 	return result
 }
 
-const endGame = (room: GameRoom) => {
+const broadcastToRoom = (room: GameRoom, msg: string) => {
 	room.server.clients.forEach((client: CustomWebSocket) => {
-		client.send(JSON.stringify({ type: 'UPDATE', ...roomToGameState(room) }))
-		client.send(JSON.stringify({ type: 'END' }))
+		client.send(msg)
 	})
+}
+
+const endGame = (room: GameRoom) => {
+	broadcastToRoom(room, JSON.stringify({ type: 'UPDATE', ...roomToGameState(room) }))
+	broadcastToRoom(room, JSON.stringify({ type: 'END' }))
 	room.server.close()
 	delete rooms[room.id]
 }
@@ -92,9 +98,7 @@ export const createGameRoom = (players: MatchingPlayer[]): string => {
 						if (GameManager.isGameEnd(room.field)) {
 							endGame(room)
 						}
-						ws.send(
-							JSON.stringify({ type: 'UPDATE', ...roomToGameState(rooms[action.data.room_id]) })
-						)
+						broadcastToRoom(room, JSON.stringify({ type: 'UPDATE', ...roomToGameState(room) }))
 					} else {
 						ws.send(JSON.stringify({ type: 'FAILED' }))
 					}

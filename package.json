@@ -17,6 +17,7 @@
 	},
 	"homepage": "https://github.com/four-colors-reversi/websocket-server#readme",
 	"dependencies": {
+		"dotenv": "^16.0.1",
 		"uuid": "^8.3.2",
 		"ws": "^8.2.3"
 	},

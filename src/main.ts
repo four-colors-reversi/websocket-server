@@ -3,6 +3,7 @@ import internal from 'stream'
 import { onUpgradedGameServer } from './game_server'
 import { onUpgradedMatchingServer } from './matching_server'
 import { Action } from './types'
+import 'dotenv/config'
 
 const http_server: Server = createServer()
 
@@ -46,4 +47,4 @@ http_server.on('upgrade', (request: IncomingMessage, socket: internal.Duplex, he
 	}
 })
 
-http_server.listen(8080)
+http_server.listen(process.env.PORT, process.env.ADDRESS)

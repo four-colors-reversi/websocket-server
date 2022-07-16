@@ -1,7 +1,7 @@
 import { IncomingMessage } from 'http'
 import internal from 'stream'
 import { v4 as uuidv4 } from 'uuid'
-import { WebSocketServer, RawData } from 'ws'
+import { WebSocketServer } from 'ws'
 import GameManager from './game'
 import { exitSocket } from './main'
 import {
@@ -109,7 +109,7 @@ export const createGameRoom = (players: MatchingPlayer[]): string => {
 		})
 	})
 
-	return `ws://localhost:8080/game/${room_id}`
+	return `ws://${process.env.ADDRESS}:${process.env.PORT}/game/${room_id}`
 }
 
 const roomToGameState = (room: GameRoom): GameState => {

@@ -2,7 +2,7 @@ import { createServer, Server, IncomingMessage } from 'http'
 import internal from 'stream'
 import { onUpgradedGameServer } from './game_server'
 import { onUpgradedMatchingServer } from './matching_server'
-import { Action } from './types'
+import { Action, ActionType } from './types'
 import 'dotenv/config'
 
 const http_server: Server = createServer()
@@ -18,26 +18,35 @@ http_server.on('upgrade', (request: IncomingMessage, socket: internal.Duplex, he
 		return
 	}
 
-	const path = request.url.split('/')[1]
+	const top_path = request.url.split('/')[1]
+	const sub_path = request.url.split('/')[2]
 
-	const action_base64_str: string = request.headers['sec-websocket-protocol']
-	let action: Action
+	const custom_data_base64_str: string = request.headers['sec-websocket-protocol']
+	let custom_data: any
 	try {
-		action = JSON.parse(Buffer.from(action_base64_str, 'base64').toString())
+		custom_data = JSON.parse(Buffer.from(custom_data_base64_str, 'base64').toString())
+		if (custom_data == undefined) custom_data = {}
 	} catch (e) {
 		exitSocket(socket)
 		return
 	}
 
-	switch (path) {
+	switch (top_path) {
 		case 'matching': {
+			if (sub_path != 'create' && sub_path != 'join') {
+				exitSocket(socket)
+				return
+			}
+
+			const matching_type: ActionType = sub_path == 'create' ? 'CREATE' : 'JOIN'
+			const action: Action = { type: matching_type, data: custom_data }
+
 			onUpgradedMatchingServer(request, socket, head, action)
 			break
 		}
 		case 'game': {
-			if (action.data == undefined) action.data = {}
-			action.data.room_id = request.url.split('/')[2]
-			onUpgradedGameServer(request, socket, head, action)
+			custom_data.room_id = sub_path
+			onUpgradedGameServer(request, socket, head, custom_data)
 			break
 		}
 		default: {
